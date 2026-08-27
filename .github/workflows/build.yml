@@ -25,7 +25,7 @@ jobs:
 
       # Configure Gradle with official caching to optimize build times
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v3
+        uses: gradle/actions/setup-gradle@v4
 
       # Ensure the Gradle wrapper has execution permissions
       - name: Grant execute permission for gradlew
@@ -46,7 +46,7 @@ jobs:
         env:
           STORE_PASSWORD: "android"
           KEY_PASSWORD: "android"
-        run: ./gradlew buildDebug -Djava.awt.headless=true
+        run: ./gradlew assembleDebug testDebugUnitTest -Djava.awt.headless=true
 
       # Upload the built APK as a build artifact
       - name: Upload APK
