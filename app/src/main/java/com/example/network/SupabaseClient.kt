@@ -19,7 +19,7 @@ object SupabaseClient {
             host = "login"
         }
         install(ComposeAuth) {
-            googleNativeLogin(serverClientId = "37964311824-u0f5cbgkft0d2d37cpl2j54eqidq311b.apps.googleusercontent.com")
+            googleNativeLogin(serverClientId = "476115501321-16q5a16a1nn9s0stgajcnquf9k54avm7.apps.googleusercontent.com")
         }
     }
 }
