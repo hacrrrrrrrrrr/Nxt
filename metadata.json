@@ -1,0 +1,6 @@
+{
+  "name": "NXT E-SPORTS",
+  "description": "A complete, production-ready Free Fire esports tournament app.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
