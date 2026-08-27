@@ -1,5 +1,14 @@
 package com.example
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.size
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.draw.alpha
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.res.painterResource
+import androidx.compose.foundation.Image
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -19,6 +28,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.NavHost
 import kotlinx.coroutines.launch
 import androidx.navigation.compose.composable
@@ -46,19 +56,20 @@ class MainActivity : ComponentActivity() {
             MyApplicationTheme {
                 val navController = rememberNavController()
                 
-                var startDest by remember { mutableStateOf<String?>(null) }
-                
                 LaunchedEffect(Unit) {
+                    kotlinx.coroutines.delay(2000L)
                     val session = SupabaseClient.client.auth.currentSessionOrNull()
                     if (session != null) {
-                        startDest = "main"
+                        navController.navigate("main") { popUpTo("splash") { inclusive = true } }
                     } else {
-                        startDest = "auth"
+                        navController.navigate("auth") { popUpTo("splash") { inclusive = true } }
                     }
                 }
                 
-                if (startDest != null) {
-                    NavHost(navController = navController, startDestination = startDest!!) {
+                NavHost(navController = navController, startDestination = "splash") {
+                    composable("splash") {
+                        SplashScreen()
+                    }
                         composable("auth") {
                             AuthScreen(
                                 onAuthSuccess = {
@@ -103,7 +114,6 @@ class MainActivity : ComponentActivity() {
                             }
                         )
                     }
-                }
                 }
             }
         }
@@ -162,5 +172,39 @@ fun MainScreen(
                 4 -> ProfileScreen(onLogout = onLogout)
             }
         }
+    }
+}
+
+
+@Composable
+fun SplashScreen() {
+    var startAnimation by remember { mutableStateOf(false) }
+    val scale = animateFloatAsState(
+        targetValue = if (startAnimation) 1f else 0.5f,
+        animationSpec = tween(durationMillis = 1000)
+    )
+    val alpha = animateFloatAsState(
+        targetValue = if (startAnimation) 1f else 0f,
+        animationSpec = tween(durationMillis = 1000)
+    )
+
+    LaunchedEffect(key1 = true) {
+        startAnimation = true
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background),
+        contentAlignment = Alignment.Center
+    ) {
+        Image(
+            painter = painterResource(id = R.drawable.ic_launcher_foreground),
+            contentDescription = "App Logo",
+            modifier = Modifier
+                .size(200.dp)
+                .scale(scale.value)
+                .alpha(alpha.value)
+        )
     }
 }

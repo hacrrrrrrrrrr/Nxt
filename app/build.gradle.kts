@@ -15,7 +15,7 @@ android {
   compileSdk { version = release(36) { minorApiLevel = 1 } }
 
   defaultConfig {
-    applicationId = "com.nxt.esports"
+    applicationId = "com.jod.esports"
     minSdk = 24
     targetSdk = 36
     versionCode = 1
@@ -115,6 +115,7 @@ dependencies {
   implementation("io.github.jan-tennert.supabase:postgrest-kt:3.1.2")
   implementation("io.github.jan-tennert.supabase:storage-kt:3.1.2")
   implementation("io.github.jan-tennert.supabase:auth-kt:3.1.2")
+  implementation("io.github.jan-tennert.supabase:compose-auth:3.1.2")
   implementation("io.ktor:ktor-client-android:3.0.3")
   implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.8.0")
   // Uncomment to use Firestore:
@@ -123,9 +124,9 @@ dependencies {
   // Uncomment ALL FOUR of the following dependencies together to use Firebase Auth and Google
   // Sign-In via Credential Manager:
   // implementation(libs.firebase.auth)
-  // implementation(libs.androidx.credentials)
-  // implementation(libs.androidx.credentials.play.services)
-  // implementation(libs.googleid)
+  implementation(libs.androidx.credentials)
+  implementation(libs.androidx.credentials.play.services)
+  implementation(libs.googleid)
   implementation(libs.firebase.appcheck.recaptcha)
   implementation(libs.kotlinx.coroutines.android)
   implementation(libs.kotlinx.coroutines.core)

@@ -7,8 +7,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -19,10 +21,34 @@ import com.example.ui.theme.PrimaryOrange
 import com.example.ui.theme.SurfaceWhite
 import com.example.ui.theme.TextDark
 import com.example.ui.theme.TextGray
+import com.example.network.SupabaseClient
+import io.github.jan.supabase.auth.auth
+import kotlinx.coroutines.launch
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
+import kotlinx.serialization.json.jsonPrimitive
 
 @Composable
 fun ProfileScreen(onLogout: () -> Unit = {}) {
     val context = androidx.compose.ui.platform.LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
+    
+    var ffName by remember { mutableStateOf("") }
+    var ffUid by remember { mutableStateOf("") }
+    var googleName by remember { mutableStateOf("") }
+    
+    var isEditing by remember { mutableStateOf(false) }
+    var isSaving by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        val user = SupabaseClient.client.auth.currentSessionOrNull()?.user
+        val metadata = user?.userMetadata
+        if (metadata != null) {
+            ffName = metadata["ff_name"]?.jsonPrimitive?.content ?: ""
+            ffUid = metadata["ff_uid"]?.jsonPrimitive?.content ?: ""
+            googleName = metadata["full_name"]?.jsonPrimitive?.content ?: user.email ?: ""
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -50,20 +76,91 @@ fun ProfileScreen(onLogout: () -> Unit = {}) {
         }
 
         Spacer(modifier = Modifier.height(16.dp))
-
+        
         Text(
-            text = "Player_One", // Mock in-game name
-            fontWeight = FontWeight.ExtraBold,
-            fontSize = 24.sp,
-            color = TextDark
-        )
-        Text(
-            text = "UID: 1234567890", // Mock UID
-            fontSize = 14.sp,
+            text = googleName,
+            fontWeight = FontWeight.Medium,
+            fontSize = 16.sp,
             color = TextGray
         )
+        
+        Spacer(modifier = Modifier.height(24.dp))
 
-        Spacer(modifier = Modifier.height(32.dp))
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(containerColor = SurfaceWhite),
+            shape = RoundedCornerShape(16.dp)
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Game Profile",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 18.sp,
+                        color = TextDark
+                    )
+                    IconButton(onClick = { 
+                        if (isEditing) {
+                            // Save
+                            coroutineScope.launch {
+                                isSaving = true
+                                try {
+                                    SupabaseClient.client.auth.updateUser {
+                                        data = buildJsonObject {
+                                            put("ff_name", ffName)
+                                            put("ff_uid", ffUid)
+                                        }
+                                    }
+                                    isEditing = false
+                                } catch (e: Exception) {
+                                    android.widget.Toast.makeText(context, "Failed to save", android.widget.Toast.LENGTH_SHORT).show()
+                                } finally {
+                                    isSaving = false
+                                }
+                            }
+                        } else {
+                            isEditing = true
+                        }
+                    }) {
+                        if (isSaving) {
+                            CircularProgressIndicator(modifier = Modifier.size(24.dp), strokeWidth = 2.dp, color = PrimaryOrange)
+                        } else if (isEditing) {
+                            Icon(Icons.Default.Check, contentDescription = "Save", tint = PrimaryOrange)
+                        } else {
+                            Icon(Icons.Default.Edit, contentDescription = "Edit", tint = TextGray)
+                        }
+                    }
+                }
+                
+                Spacer(modifier = Modifier.height(12.dp))
+                
+                OutlinedTextField(
+                    value = ffName,
+                    onValueChange = { ffName = it },
+                    label = { Text("Free Fire Name") },
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = isEditing,
+                    singleLine = true
+                )
+                
+                Spacer(modifier = Modifier.height(8.dp))
+                
+                OutlinedTextField(
+                    value = ffUid,
+                    onValueChange = { ffUid = it },
+                    label = { Text("Free Fire UID") },
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = isEditing,
+                    singleLine = true
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
 
         Card(
             modifier = Modifier.fillMaxWidth(),

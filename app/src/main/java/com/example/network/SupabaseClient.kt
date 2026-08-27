@@ -12,6 +12,9 @@ object SupabaseClient {
     ) {
         install(Postgrest)
         install(Storage)
-        install(Auth)
+        install(Auth) {
+            scheme = "com.jod.esports"
+            host = "login"
+        }
     }
 }

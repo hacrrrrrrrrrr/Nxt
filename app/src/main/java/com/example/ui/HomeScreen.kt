@@ -18,6 +18,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.foundation.Image
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
@@ -171,21 +172,14 @@ fun HomeTopAppBar(walletBalance: Int, onAddMoneyClick: () -> Unit) {
         verticalAlignment = Alignment.CenterVertically
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Box(
-                modifier = Modifier
-                    .background(PrimaryOrange, RoundedCornerShape(8.dp))
-                    .padding(6.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Warning, // Placeholder for assault rifle
-                    contentDescription = "Logo",
-                    tint = SurfaceWhite,
-                    modifier = Modifier.size(20.dp)
-                )
-            }
+            Image(
+                painter = androidx.compose.ui.res.painterResource(id = com.example.R.drawable.ic_launcher_foreground),
+                contentDescription = "Logo",
+                modifier = Modifier.size(36.dp)
+            )
             Spacer(modifier = Modifier.width(8.dp))
             Text(
-                text = "NXT E-SPORTS",
+                text = "Jod Esports",
                 fontWeight = FontWeight.Black,
                 letterSpacing = (-0.5).sp,
                 fontSize = 18.sp,

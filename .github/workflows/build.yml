@@ -43,7 +43,7 @@ jobs:
       # Configure Google Services for CI environment
       - name: Configure Google Services
         run: |
-          echo '{"project_info":{"project_number":"123456789","project_id":"ci-project"},"client":[{"client_info":{"mobilesdk_app_id":"1:123456789:android:abc123def456","android_client_info":{"package_name":"com.nxt.esports"}},"api_key":[{"current_key":"ci-api-key"}]}]}' > app/google-services.json
+          echo '{"project_info":{"project_number":"123456789","project_id":"ci-project"},"client":[{"client_info":{"mobilesdk_app_id":"1:123456789:android:abc123def456","android_client_info":{"package_name":"com.jod.esports"}},"api_key":[{"current_key":"ci-api-key"}]}]}' > app/google-services.json
 
       # Run the build to generate the APK (skipping tests to prevent CI failures)
       - name: Build APK with Gradle

@@ -1,25 +1,109 @@
-<?xml version="1.0" encoding="utf-8"?>
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
     android:width="108dp"
     android:height="108dp"
-    android:viewportWidth="108"
-    android:viewportHeight="108">
-    <group
-        android:translateX="27"
-        android:translateY="27">
-        
-        <!-- Abstract Bullet Design -->
-        <path
-            android:fillColor="#121212"
-            android:pathData="M27,5 c-8,0 -12,12 -12,22 v20 h24 v-20 c0,-10 -4,-22 -12,-22 z" />
-            
-        <path
-            android:fillColor="#FFFFFF"
-            android:pathData="M15,48 h24 v4 h-24 z" />
-            
-        <path
-            android:fillColor="#2C2C2C"
-            android:pathData="M17,53 h20 v2 h-20 z" />
-            
-    </group>
+    android:viewportWidth="512"
+    android:viewportHeight="512">
+
+  <!-- Outer esports badge -->
+  <path
+      android:pathData="M256 28 L454 104 L424 330 L256 484 L88 330 L58 104 Z"
+      android:fillColor="#080808"
+      android:strokeWidth="10">
+      <aapt:attr name="android:strokeColor">
+          <gradient
+              android:startX="80"
+              android:startY="70"
+              android:endX="430"
+              android:endY="450"
+              android:type="linear">
+              <item android:offset="0" android:color="#FFB020" />
+              <item android:offset="0.45" android:color="#FF6A00" />
+              <item android:offset="1" android:color="#E83A00" />
+          </gradient>
+      </aapt:attr>
+  </path>
+
+  <!-- Inner orange shield -->
+  <path
+      android:pathData="M256 65 L414 124 L389 306 L256 426 L123 306 L98 124 Z">
+      <aapt:attr name="android:fillColor">
+          <gradient
+              android:startX="80"
+              android:startY="70"
+              android:endX="430"
+              android:endY="450"
+              android:type="linear">
+              <item android:offset="0" android:color="#FFB020" />
+              <item android:offset="0.45" android:color="#FF6A00" />
+              <item android:offset="1" android:color="#E83A00" />
+          </gradient>
+      </aapt:attr>
+  </path>
+
+  <!-- Dark center -->
+  <path
+      android:pathData="M256 91 L385 140 L363 289 L256 386 L149 289 L127 140 Z">
+      <aapt:attr name="android:fillColor">
+          <gradient
+              android:startX="100"
+              android:startY="70"
+              android:endX="420"
+              android:endY="450"
+              android:type="linear">
+              <item android:offset="0" android:color="#242424" />
+              <item android:offset="1" android:color="#050505" />
+          </gradient>
+      </aapt:attr>
+  </path>
+
+  <!-- Speed / energy cuts -->
+  <path
+      android:pathData="M137 173 L218 147 L187 185 L137 198 Z"
+      android:fillColor="#FF7A00" />
+
+  <path
+      android:pathData="M375 173 L294 147 L325 185 L375 198 Z"
+      android:fillColor="#FF7A00" />
+
+  <!-- Central angular emblem -->
+  <path
+      android:pathData="M256 124 L296 177 L276 177 L310 225 L280 225 L300 278 L256 344 L212 278 L232 225 L202 225 L236 177 L216 177 Z">
+      <aapt:attr name="android:fillColor">
+          <gradient
+              android:startX="80"
+              android:startY="70"
+              android:endX="430"
+              android:endY="450"
+              android:type="linear">
+              <item android:offset="0" android:color="#FFB020" />
+              <item android:offset="0.45" android:color="#FF6A00" />
+              <item android:offset="1" android:color="#E83A00" />
+          </gradient>
+      </aapt:attr>
+  </path>
+
+  <!-- Cross cut -->
+  <path
+      android:pathData="M228 215 H284 L272 235 H240 Z"
+      android:fillColor="#0A0A0A" />
+
+  <!-- Lower slash -->
+  <path
+      android:pathData="M201 306 L244 274 L230 322 L196 347 Z"
+      android:fillColor="#FFB020" />
+
+  <path
+      android:pathData="M311 306 L268 274 L282 322 L316 347 Z"
+      android:fillColor="#FFB020" />
+
+  <!-- Small esports dots -->
+  <path
+      android:pathData="M 151, 239 a 5,5 0 1,1 0,10 a 5,5 0 1,1 0,-10"
+      android:fillColor="#FFB020" />
+      
+  <path
+      android:pathData="M 361, 239 a 5,5 0 1,1 0,10 a 5,5 0 1,1 0,-10"
+      android:fillColor="#FFB020" />
+
 </vector>

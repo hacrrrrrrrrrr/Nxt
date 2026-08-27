@@ -69,6 +69,19 @@ class AuthViewModel : ViewModel() {
         }
     }
 
+    fun googleLogin(context: android.content.Context) {
+        viewModelScope.launch {
+            _isSubmitting.value = true
+            try {
+                SupabaseClient.client.auth.signInWith(io.github.jan.supabase.auth.providers.Google)
+            } catch (e: Exception) {
+                _authMessage.value = "Google Login failed: ${e.message}"
+            } finally {
+                _isSubmitting.value = false
+            }
+        }
+    }
+
     fun signup(email: String, pass: String) {
         if (email.isBlank() || pass.isBlank()) {
             _authMessage.value = "Email and Password cannot be empty."
@@ -327,7 +340,7 @@ fun AuthScreen(onAuthSuccess: () -> Unit, viewModel: AuthViewModel = viewModel()
         
         Button(
             onClick = { 
-                android.widget.Toast.makeText(context, "Google Sign-In requires configuring OAuth in Supabase console for Android.", android.widget.Toast.LENGTH_LONG).show()
+                viewModel.googleLogin(context)
             },
             colors = ButtonDefaults.buttonColors(containerColor = TextDark),
             modifier = Modifier
@@ -335,6 +348,13 @@ fun AuthScreen(onAuthSuccess: () -> Unit, viewModel: AuthViewModel = viewModel()
                 .height(50.dp),
             shape = RoundedCornerShape(12.dp)
         ) {
+            Icon(
+                painter = androidx.compose.ui.res.painterResource(id = com.example.R.drawable.ic_google_logo),
+                contentDescription = "Google Logo",
+                modifier = Modifier.size(24.dp),
+                tint = Color.Unspecified
+            )
+            Spacer(modifier = Modifier.width(12.dp))
             Text(
                 text = "CONTINUE WITH GOOGLE",
                 fontWeight = FontWeight.Bold,

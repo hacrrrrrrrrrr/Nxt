@@ -22,6 +22,6 @@ dependencyResolutionManagement {
   }
 }
 
-rootProject.name = "NXT E-SPORTS"
+rootProject.name = "Jod Esports"
 
 include(":app")
