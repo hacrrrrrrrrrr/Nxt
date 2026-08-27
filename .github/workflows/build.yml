@@ -46,4 +46,11 @@ jobs:
         env:
           STORE_PASSWORD: "android"
           KEY_PASSWORD: "android"
-        run: ./gradlew buildDebug
+        run: ./gradlew buildDebug -Djava.awt.headless=true
+
+      # Upload the built APK as a build artifact
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: debug-apk
+          path: app/build/outputs/apk/debug/app-debug.apk
