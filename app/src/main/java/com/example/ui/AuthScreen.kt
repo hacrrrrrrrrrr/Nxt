@@ -24,6 +24,9 @@ import com.example.network.SupabaseClient
 import com.example.ui.theme.*
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.auth.providers.builtin.Email
+import io.github.jan.supabase.compose.auth.composeAuth
+import io.github.jan.supabase.compose.auth.composable.NativeSignInResult
+import io.github.jan.supabase.compose.auth.composable.rememberSignInWithGoogle
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -41,6 +44,10 @@ class AuthViewModel : ViewModel() {
 
     fun clearMessage() {
         _authMessage.value = null
+    }
+    
+    fun setErrorMessage(msg: String) {
+        _authMessage.value = msg
     }
 
     fun login(email: String, pass: String) {
@@ -63,19 +70,6 @@ class AuthViewModel : ViewModel() {
                     msg.contains("Email not confirmed") -> "Please verify your email address first."
                     else -> "Login failed: $msg"
                 }
-            } finally {
-                _isSubmitting.value = false
-            }
-        }
-    }
-
-    fun googleLogin(context: android.content.Context) {
-        viewModelScope.launch {
-            _isSubmitting.value = true
-            try {
-                SupabaseClient.client.auth.signInWith(io.github.jan.supabase.auth.providers.Google)
-            } catch (e: Exception) {
-                _authMessage.value = "Google Login failed: ${e.message}"
             } finally {
                 _isSubmitting.value = false
             }
@@ -126,6 +120,27 @@ fun AuthScreen(onAuthSuccess: () -> Unit, viewModel: AuthViewModel = viewModel()
     val recoil = remember { Animatable(0f) }
     val flashAlpha = remember { Animatable(0f) }
     val coroutineScope = rememberCoroutineScope()
+
+    val googleSignInState = SupabaseClient.client.composeAuth.rememberSignInWithGoogle(
+        onResult = { result ->
+            when (result) {
+                is NativeSignInResult.Success -> {
+                    // Navigate on success
+                    onAuthSuccess()
+                }
+                is NativeSignInResult.ClosedByUser -> {
+                    viewModel.setErrorMessage("Google Sign-In canceled")
+                }
+                is NativeSignInResult.Error -> {
+                    viewModel.setErrorMessage(result.message)
+                }
+                is NativeSignInResult.NetworkError -> {
+                    viewModel.setErrorMessage(result.message)
+                }
+            }
+        },
+        fallback = {}
+    )
 
     fun fireGun() {
         coroutineScope.launch {
@@ -340,7 +355,7 @@ fun AuthScreen(onAuthSuccess: () -> Unit, viewModel: AuthViewModel = viewModel()
         
         Button(
             onClick = { 
-                viewModel.googleLogin(context)
+                googleSignInState.startFlow()
             },
             colors = ButtonDefaults.buttonColors(containerColor = TextDark),
             modifier = Modifier

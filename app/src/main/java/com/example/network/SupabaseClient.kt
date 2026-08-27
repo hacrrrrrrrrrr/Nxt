@@ -4,6 +4,8 @@ import io.github.jan.supabase.createSupabaseClient
 import io.github.jan.supabase.postgrest.Postgrest
 import io.github.jan.supabase.storage.Storage
 import io.github.jan.supabase.auth.Auth
+import io.github.jan.supabase.compose.auth.ComposeAuth
+import io.github.jan.supabase.compose.auth.googleNativeLogin
 
 object SupabaseClient {
     val client = createSupabaseClient(
@@ -15,6 +17,9 @@ object SupabaseClient {
         install(Auth) {
             scheme = "com.jod.esports"
             host = "login"
+        }
+        install(ComposeAuth) {
+            googleNativeLogin(serverClientId = "37964311824-u0f5cbgkft0d2d37cpl2j54eqidq311b.apps.googleusercontent.com")
         }
     }
 }
