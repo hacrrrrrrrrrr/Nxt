@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
+import android.media.MediaPlayer
 import com.example.network.SupabaseClient
 import com.example.ui.theme.*
 import io.github.jan.supabase.auth.auth
@@ -143,6 +144,14 @@ fun AuthScreen(onAuthSuccess: () -> Unit, viewModel: AuthViewModel = viewModel()
     )
 
     fun fireGun() {
+        try {
+            val mediaPlayer = MediaPlayer.create(context, com.example.R.raw.sound)
+            mediaPlayer?.start()
+            mediaPlayer?.setOnCompletionListener { it.release() }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+
         coroutineScope.launch {
             bulletX.snapTo(0f)
             flashAlpha.snapTo(0f)
