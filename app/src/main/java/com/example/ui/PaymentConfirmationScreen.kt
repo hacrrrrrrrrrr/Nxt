@@ -74,12 +74,12 @@ fun PaymentConfirmationScreen(
                     Text("Amount", color = TextGray, fontSize = 14.sp, fontWeight = FontWeight.Medium)
                     Text("₹$amount", color = TextDark, fontSize = 16.sp, fontWeight = FontWeight.Bold)
                 }
-                Divider(color = Color(0xFFF3F4F6))
+                HorizontalDivider(color = Color(0xFFF3F4F6))
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                     Text("Type", color = TextGray, fontSize = 14.sp, fontWeight = FontWeight.Medium)
                     Text("Deposit", color = TextDark, fontSize = 14.sp, fontWeight = FontWeight.Bold)
                 }
-                Divider(color = Color(0xFFF3F4F6))
+                HorizontalDivider(color = Color(0xFFF3F4F6))
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                     Text("Status", color = TextGray, fontSize = 14.sp, fontWeight = FontWeight.Medium)
                     Text(

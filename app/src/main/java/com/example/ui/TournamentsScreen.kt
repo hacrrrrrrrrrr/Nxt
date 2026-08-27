@@ -39,7 +39,7 @@ fun TournamentsScreen() {
             containerColor = SurfaceWhite,
             contentColor = PrimaryOrange,
             indicator = { tabPositions ->
-                TabRowDefaults.Indicator(
+                TabRowDefaults.SecondaryIndicator(
                     Modifier.tabIndicatorOffset(tabPositions[selectedTab]),
                     color = PrimaryOrange
                 )
