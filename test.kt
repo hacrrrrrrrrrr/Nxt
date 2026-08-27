@@ -1,8 +1,7 @@
-package test
-import io.github.jan.supabase.auth.auth
-import io.github.jan.supabase.auth.user.UserUpdateBuilder
-import kotlinx.serialization.json.buildJsonObject
-fun test() {
-    val b = UserUpdateBuilder()
-    b.data = buildJsonObject {}
+import io.github.jan.supabase.compose.auth.composable.NativeSignInResult
+
+fun test(res: NativeSignInResult) {
+    if (res is NativeSignInResult.ClosedByUser) {
+        println(res.toString())
+    }
 }

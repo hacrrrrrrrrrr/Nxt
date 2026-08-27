@@ -130,13 +130,13 @@ fun AuthScreen(onAuthSuccess: () -> Unit, viewModel: AuthViewModel = viewModel()
                     onAuthSuccess()
                 }
                 is NativeSignInResult.ClosedByUser -> {
-                    viewModel.setErrorMessage("Google Sign-In canceled")
+                    viewModel.setErrorMessage("Sign-In Canceled: Developer error or SHA-1 mismatch (Google returned CANCELED/16). Exact result: $result")
                 }
                 is NativeSignInResult.Error -> {
-                    viewModel.setErrorMessage(result.message)
+                    viewModel.setErrorMessage("Error: ${result.message}")
                 }
                 is NativeSignInResult.NetworkError -> {
-                    viewModel.setErrorMessage(result.message)
+                    viewModel.setErrorMessage("NetworkError: ${result.message}")
                 }
             }
         },
