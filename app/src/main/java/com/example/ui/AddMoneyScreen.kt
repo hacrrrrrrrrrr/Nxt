@@ -28,6 +28,9 @@ import com.example.ui.theme.SurfaceWhite
 import com.example.ui.theme.TextDark
 import com.example.ui.theme.TextGray
 import kotlinx.coroutines.launch
+import com.example.network.SupabaseClient
+import io.github.jan.supabase.auth.auth
+import io.github.jan.supabase.postgrest.postgrest
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -144,22 +147,18 @@ fun AddMoneyScreen(
 
                     coroutineScope.launch {
                         try {
-                            // Actual Implementation Structure using Supabase-kt
-                            /*
-                            val imageBytes = context.contentResolver.openInputStream(selectedImageUri!!)?.use { it.readBytes() }
-                                ?: throw Exception("Could not read image")
-                                
-                            viewModel.submitDeposit(
-                                userId = "current-user-uuid", // From auth state
-                                amount = amount,
-                                utrId = utrId,
-                                imageBytes = imageBytes
-                            )
-                            */
+                            val session = SupabaseClient.client.auth.currentSessionOrNull()
+                            if (session != null) {
+                                val amountInt = amount.toIntOrNull() ?: throw Exception("Invalid amount")
+                                val request = WalletRequest(
+                                    user_id = session.user!!.id,
+                                    type = "ADD",
+                                    amount = amountInt,
+                                    upi_id = utrId // we store UTR in the upi_id field for now, or just send it as text
+                                )
+                                SupabaseClient.client.postgrest["wallet_requests"].insert(request)
+                            }
 
-                            // We keep a small delay here so the UI can be previewed without a real Supabase client injection
-                            kotlinx.coroutines.delay(1500)
-                            
                             isLoading = false
                             onNavigateToConfirmation(amount)
                         } catch (e: Exception) {

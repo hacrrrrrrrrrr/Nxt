@@ -34,7 +34,9 @@ data class Tournament(
 @Serializable
 data class Profile(
     val id: String,
-    val wallet_balance: Int
+    val wallet_balance: Int,
+    val email: String? = null,
+    val username: String? = null
 )
 
 @Serializable
@@ -97,6 +99,11 @@ class HomeViewModel : ViewModel() {
                 try {
                     val participant = TournamentParticipant(tournament.id, userId, ffName, inGameUid)
                     SupabaseClient.client.postgrest["tournament_participants"].insert(participant)
+                    
+                    // Increment the currentPlayers count dynamically
+                    val newCurrentPlayers = tournament.currentPlayers + 1
+                    SupabaseClient.client.postgrest["tournaments"]
+                        .update(mapOf("currentPlayers" to newCurrentPlayers)) { filter { eq("id", tournament.id) } }
                 } catch (e: Exception) {
                     // Ignore if table doesn't exist yet, but in a real app this should be a transaction.
                 }
