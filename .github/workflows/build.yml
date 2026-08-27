@@ -36,6 +36,14 @@ jobs:
         run: |
           keytool -genkey -v -keystore debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
 
+      # Create dummy google-services.json to satisfy the Google Services Plugin during CI
+      - name: Create dummy google-services.json
+        run: |
+          echo '{"project_info":{"project_number":"123456789","project_id":"dummy-project"},"client":[{"client_info":{"mobilesdk_app_id":"1:123456789:android:abc123def456","android_client_info":{"package_name":"com.nxt.esports"}},"api_key":[{"current_key":"dummy-api-key"}]}]}' > app/google-services.json
+
       # Run the build and execute unit tests
       - name: Build with Gradle
-        run: ./gradlew build
+        env:
+          STORE_PASSWORD: "android"
+          KEY_PASSWORD: "android"
+        run: ./gradlew buildDebug

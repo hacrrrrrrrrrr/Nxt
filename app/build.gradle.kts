@@ -15,7 +15,7 @@ android {
   compileSdk { version = release(36) { minorApiLevel = 1 } }
 
   defaultConfig {
-    applicationId = "com.aistudio.nxtesports.qxwzp"
+    applicationId = "com.nxt.esports"
     minSdk = 24
     targetSdk = 36
     versionCode = 1
@@ -57,7 +57,17 @@ android {
     compose = true
     buildConfig = true
   }
-  testOptions { unitTests { isIncludeAndroidResources = true } }
+  testOptions {
+    unitTests {
+      isIncludeAndroidResources = true
+      all {
+        if (this is org.gradle.api.tasks.testing.Test) {
+          (this as org.gradle.api.tasks.testing.Test).jvmArgs("-Drobolectric.enabledSdks=36")
+          
+        }
+      }
+    }
+  }
   dependenciesInfo {
     includeInApk = false
     includeInBundle = true
