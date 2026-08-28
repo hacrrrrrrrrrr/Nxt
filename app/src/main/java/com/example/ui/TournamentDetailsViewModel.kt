@@ -99,6 +99,7 @@ class TournamentDetailsViewModel : ViewModel() {
                     .update(mapOf("currentPlayers" to newCurrentPlayers)) { filter { eq("id", tournament.id) } }
 
                 _uiState.value = _uiState.value.copy(
+                    walletBalance = newBalance,
                     joinSuccess = "Successfully joined!",
                     joinError = null
                 )
