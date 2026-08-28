@@ -88,7 +88,7 @@ fun TournamentDetailsScreen(
                         }
                     } else {
                         item {
-                            if (System.currentTimeMillis() >= tournament.startTimestamp || tournament.status != "UPCOMING") {
+                            if (System.currentTimeMillis() >= tournament.startTimestamp || tournament.status == "COMPLETED") {
                                 Card(
                                     modifier = Modifier.fillMaxWidth().shadow(2.dp, RoundedCornerShape(12.dp)),
                                     colors = CardDefaults.cardColors(containerColor = SurfaceWhite),
@@ -157,6 +157,8 @@ fun TournamentInfoHeader(tournament: Tournament) {
 
 @Composable
 fun RoomIdPassCard(tournament: Tournament) {
+    val showDetails = System.currentTimeMillis() >= (tournament.startTimestamp - (10 * 60 * 1000))
+    
     Card(
         modifier = Modifier.fillMaxWidth().shadow(2.dp, RoundedCornerShape(12.dp)),
         colors = CardDefaults.cardColors(containerColor = Color(0xFFF0FDF4)), // light green
@@ -164,8 +166,10 @@ fun RoomIdPassCard(tournament: Tournament) {
     ) {
         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text("ROOM DETAILS", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = TagGreen)
-            if (tournament.room_id.isNullOrBlank()) {
-                Text("Room ID & Password will be updated here before the match starts. Stay tuned!", fontSize = 14.sp, color = TextDark)
+            if (!showDetails) {
+                Text("Room ID & Password will be revealed 10 minutes before the match starts.", fontSize = 14.sp, color = TextDark)
+            } else if (tournament.room_id.isNullOrBlank()) {
+                Text("Room ID & Password will be updated here shortly. Stay tuned!", fontSize = 14.sp, color = TextDark)
             } else {
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                     Column {

@@ -265,7 +265,7 @@ fun MainScreen(    onNavigateToTournamentDetails: (String) -> Unit,
         Box(modifier = Modifier.padding(innerPadding)) {
             when (selectedItem) {
                 0 -> HomeScreen(viewModel = homeViewModel, onAddMoneyClick = onNavigateToAddMoney, onNavigateToTournamentDetails = onNavigateToTournamentDetails)
-                1 -> TournamentsScreen()
+                1 -> TournamentsScreen(onNavigateToTournamentDetails = onNavigateToTournamentDetails)
                 2 -> WalletScreen(walletBalance = uiState.walletBalance, onAddMoneyClick = onNavigateToAddMoney)
                 3 -> LeaderboardScreen()
                 4 -> ProfileScreen(onLogout = onLogout)
