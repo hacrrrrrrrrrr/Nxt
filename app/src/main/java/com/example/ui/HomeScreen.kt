@@ -36,70 +36,14 @@ import com.example.ui.theme.*
 @Composable
 fun HomeScreen(
     viewModel: HomeViewModel = viewModel(),
-    onAddMoneyClick: () -> Unit = {}
+    onAddMoneyClick: () -> Unit = {},
+    onNavigateToTournamentDetails: (String) -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val context = androidx.compose.ui.platform.LocalContext.current
 
     var selectedMode by remember { mutableStateOf("BR") }
-    var tournamentToJoin by remember { mutableStateOf<Tournament?>(null) }
-
-    LaunchedEffect(uiState.joinSuccess, uiState.joinError) {
-        if (uiState.joinSuccess != null) {
-            android.widget.Toast.makeText(context, uiState.joinSuccess, android.widget.Toast.LENGTH_SHORT).show()
-            viewModel.clearMessages()
-        }
-        if (uiState.joinError != null) {
-            android.widget.Toast.makeText(context, uiState.joinError, android.widget.Toast.LENGTH_SHORT).show()
-            viewModel.clearMessages()
-        }
-    }
-
-    var ffName by remember { mutableStateOf("") }
-    var inGameUid by remember { mutableStateOf("") }
-
-    if (tournamentToJoin != null) {
-        AlertDialog(
-            onDismissRequest = { tournamentToJoin = null },
-            title = { Text(text = "Confirm Join") },
-            text = { 
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text(text = "Are you sure you want to join ${tournamentToJoin?.title}? It will deduct ₹${tournamentToJoin?.entryFee} from your wallet.")
-                    OutlinedTextField(
-                        value = ffName,
-                        onValueChange = { ffName = it },
-                        label = { Text("In-Game Name (FF Name)") },
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    OutlinedTextField(
-                        value = inGameUid,
-                        onValueChange = { inGameUid = it },
-                        label = { Text("In-Game UID") },
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
-            },
-            confirmButton = {
-                TextButton(onClick = {
-                    tournamentToJoin?.let { viewModel.joinTournament(it, ffName, inGameUid) }
-                    tournamentToJoin = null
-                    ffName = ""
-                    inGameUid = ""
-                }) {
-                    Text("YES, JOIN", fontWeight = FontWeight.Bold, color = PrimaryOrange)
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { 
-                    tournamentToJoin = null
-                    ffName = ""
-                    inGameUid = ""
-                }) {
-                    Text("CANCEL", color = TextGray)
-                }
-            }
-        )
-    }
+    
 
     Scaffold(
         topBar = {
@@ -129,7 +73,7 @@ fun HomeScreen(
 
             items(uiState.liveTournaments.filter { it.mode == selectedMode || selectedMode == "BR" }) { tournament ->
                 LiveRoomCard(tournament) {
-                    tournamentToJoin = tournament
+                    onNavigateToTournamentDetails(tournament.id)
                 }
             }
 
@@ -144,7 +88,7 @@ fun HomeScreen(
                 ) {
                     items(uiState.upcomingTournaments) { tournament ->
                         UpcomingTournamentCard(tournament) {
-                             tournamentToJoin = tournament
+                             onNavigateToTournamentDetails(tournament.id)
                         }
                     }
                 }
@@ -153,7 +97,7 @@ fun HomeScreen(
             item {
                 uiState.featuredTournament?.let {
                     FeaturedTournamentCard(it) {
-                        tournamentToJoin = it
+                        onNavigateToTournamentDetails(it.id)
                     }
                 }
             }

@@ -39,6 +39,7 @@ import com.example.ui.LeaderboardScreen
 import com.example.ui.PaymentConfirmationScreen
 import com.example.ui.ProfileScreen
 import com.example.ui.TournamentsScreen
+import com.example.ui.TournamentDetailsScreen
 import com.example.ui.WalletScreen
 import com.example.ui.theme.MyApplicationTheme
 import com.example.ui.theme.PrimaryOrange
@@ -49,10 +50,57 @@ import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.auth.handleDeeplinks
 import com.example.network.SupabaseClient
 import io.github.jan.supabase.postgrest.postgrest
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
+import com.google.firebase.messaging.FirebaseMessaging
+import kotlinx.coroutines.tasks.await
+
 
 class MainActivity : ComponentActivity() {
+    
+    private val requestPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted: Boolean ->
+        if (isGranted) {
+            // Permission is granted, we can send notifications
+        }
+    }
+
+    private fun askNotificationPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED) {
+                // Granted
+            } else if (shouldShowRequestPermissionRationale(Manifest.permission.POST_NOTIFICATIONS)) {
+                // Show educational UI
+                requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            } else {
+                requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            }
+        }
+    }
+
+    private fun updateFcmToken(userId: String) {
+        kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.IO).launch {
+            try {
+                val token = FirebaseMessaging.getInstance().token.await()
+                SupabaseClient.client.postgrest["profiles"].update(
+                    mapOf("fcm_token" to token)
+                ) {
+                    filter { eq("id", userId) }
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
+
         super.onCreate(savedInstanceState)
+        askNotificationPermission()
         SupabaseClient.client.handleDeeplinks(intent)
         enableEdgeToEdge()
         setContent {
@@ -66,8 +114,11 @@ class MainActivity : ComponentActivity() {
                         is io.github.jan.supabase.auth.status.SessionStatus.Authenticated -> {
                             try {
                                 val session = SupabaseClient.client.auth.currentSessionOrNull()
+                                
                                 if (session != null) {
                                     val userId = session.user!!.id
+                                    updateFcmToken(userId)
+
                                     val profile = SupabaseClient.client.postgrest["profiles"]
                                         .select { filter { eq("id", userId) } }
                                         .decodeSingleOrNull<com.example.ui.Profile>()
@@ -114,6 +165,9 @@ class MainActivity : ComponentActivity() {
                             val scope = rememberCoroutineScope()
                             MainScreen(
                                 onNavigateToAddMoney = { navController.navigate("add_money") },
+                                onNavigateToTournamentDetails = { tournamentId ->
+                                    navController.navigate("tournament_details/$tournamentId")
+                                },
                                 onLogout = {
                                     scope.launch {
                                         SupabaseClient.client.auth.signOut()
@@ -134,6 +188,14 @@ class MainActivity : ComponentActivity() {
                             }
                         )
                     }
+                    composable("tournament_details/{tournamentId}") { backStackEntry ->
+                        val tournamentId = backStackEntry.arguments?.getString("tournamentId") ?: return@composable
+                        TournamentDetailsScreen(
+                            tournamentId = tournamentId,
+                            onNavigateBack = { navController.popBackStack() },
+                            onNavigateToAddMoney = { navController.navigate("add_money") }
+                        )
+                    }
                     composable("payment_confirmation/{amount}") { backStackEntry ->
                         val amount = backStackEntry.arguments?.getString("amount") ?: "0"
                         PaymentConfirmationScreen(
@@ -152,7 +214,7 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun MainScreen(
+fun MainScreen(    onNavigateToTournamentDetails: (String) -> Unit,
     onNavigateToAddMoney: () -> Unit,
     onLogout: () -> Unit
 ) {
@@ -202,7 +264,7 @@ fun MainScreen(
     ) { innerPadding ->
         Box(modifier = Modifier.padding(innerPadding)) {
             when (selectedItem) {
-                0 -> HomeScreen(viewModel = homeViewModel, onAddMoneyClick = onNavigateToAddMoney)
+                0 -> HomeScreen(viewModel = homeViewModel, onAddMoneyClick = onNavigateToAddMoney, onNavigateToTournamentDetails = onNavigateToTournamentDetails)
                 1 -> TournamentsScreen()
                 2 -> WalletScreen(walletBalance = uiState.walletBalance, onAddMoneyClick = onNavigateToAddMoney)
                 3 -> LeaderboardScreen()

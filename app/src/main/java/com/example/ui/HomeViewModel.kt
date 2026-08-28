@@ -28,7 +28,9 @@ data class Tournament(
     val status: String,
     val isFeatured: Boolean = false,
     val dateText: String = "",
-    val image_url: String? = null
+    val image_url: String? = null,
+    val room_id: String? = null,
+    val room_pass: String? = null
 )
 
 @Serializable

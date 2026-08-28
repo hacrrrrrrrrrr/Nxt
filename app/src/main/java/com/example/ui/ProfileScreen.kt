@@ -17,6 +17,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.clickable
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.ui.layout.ContentScale
+import coil.compose.AsyncImage
+import java.util.UUID
+
 import com.example.ui.theme.PrimaryOrange
 import com.example.ui.theme.SurfaceWhite
 import com.example.ui.theme.TextDark
@@ -38,8 +44,12 @@ fun ProfileScreen(onLogout: () -> Unit = {}) {
     var ffUid by remember { mutableStateOf("") }
     var googleName by remember { mutableStateOf("") }
     
+    
     var isEditing by remember { mutableStateOf(false) }
     var isSaving by remember { mutableStateOf(false) }
+    var avatarUrl by remember { mutableStateOf("") }
+    var isShuffling by remember { mutableStateOf(false) }
+
 
     LaunchedEffect(Unit) {
         val user = SupabaseClient.client.auth.currentSessionOrNull()?.user
@@ -48,6 +58,7 @@ fun ProfileScreen(onLogout: () -> Unit = {}) {
             ffName = metadata["ff_name"]?.jsonPrimitive?.content ?: ""
             ffUid = metadata["ff_uid"]?.jsonPrimitive?.content ?: ""
             googleName = metadata["full_name"]?.jsonPrimitive?.content ?: user.email ?: ""
+            avatarUrl = metadata["avatar_url"]?.jsonPrimitive?.content ?: "https://api.dicebear.com/9.x/adventurer/png?seed=${user.id}"
         }
     }
 
@@ -60,21 +71,84 @@ fun ProfileScreen(onLogout: () -> Unit = {}) {
     ) {
         Spacer(modifier = Modifier.height(32.dp))
 
-        // Avatar Placeholder
+        // Avatar Component
         Box(
             modifier = Modifier
                 .size(100.dp)
                 .clip(CircleShape)
-                .background(PrimaryOrange.copy(alpha = 0.2f)),
+                .background(PrimaryOrange.copy(alpha = 0.2f))
+                .clickable {
+                    if (isShuffling) return@clickable
+                    coroutineScope.launch {
+                        isShuffling = true
+                        try {
+                            val currentUser = SupabaseClient.client.auth.currentSessionOrNull()?.user
+                            if (currentUser != null) {
+                                val newSeed = java.util.UUID.randomUUID().toString()
+                                val newUrl = "https://api.dicebear.com/9.x/adventurer/png?seed=$newSeed"
+                                avatarUrl = newUrl
+                                
+                                // Update metadata
+                                SupabaseClient.client.auth.updateUser {
+                                    data = buildJsonObject {
+                                        put("avatar_url", newUrl)
+                                    }
+                                }
+                                // Update profile
+                                SupabaseClient.client.postgrest["profiles"].update(
+                                    mapOf("avatar_url" to newUrl)
+                                ) {
+                                    filter { eq("id", currentUser.id) }
+                                }
+                            }
+                        } catch (e: Exception) {
+                            android.widget.Toast.makeText(context, "Failed to update avatar", android.widget.Toast.LENGTH_SHORT).show()
+                        } finally {
+                            isShuffling = false
+                        }
+                    }
+                },
             contentAlignment = Alignment.Center
         ) {
-            Icon(
-                imageVector = Icons.Default.Person,
-                contentDescription = "Avatar",
-                tint = PrimaryOrange,
-                modifier = Modifier.size(60.dp)
-            )
+            if (avatarUrl.isNotEmpty()) {
+                AsyncImage(
+                    model = avatarUrl,
+                    contentDescription = "Avatar",
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop
+                )
+            } else {
+                Icon(
+                    imageVector = Icons.Default.Person,
+                    contentDescription = "Avatar",
+                    tint = PrimaryOrange,
+                    modifier = Modifier.size(60.dp)
+                )
+            }
+            
+            // Refresh Overlay
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(androidx.compose.ui.graphics.Color.Black.copy(alpha = 0.3f)),
+                contentAlignment = Alignment.Center
+            ) {
+                if (isShuffling) {
+                    CircularProgressIndicator(modifier = Modifier.size(24.dp), color = SurfaceWhite, strokeWidth = 2.dp)
+                } else {
+                    Icon(
+                        imageVector = Icons.Default.Refresh,
+                        contentDescription = "Shuffle Avatar",
+                        tint = SurfaceWhite,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+            }
         }
+        
+        Spacer(modifier = Modifier.height(8.dp))
+        Text("Tap to shuffle avatar", fontSize = 10.sp, color = TextGray)
+
 
         Spacer(modifier = Modifier.height(16.dp))
         
