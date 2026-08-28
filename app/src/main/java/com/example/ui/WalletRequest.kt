@@ -11,6 +11,7 @@ data class WalletRequest(
     val upi_id: String? = null,
     val screenshot_url: String? = null,
     val status: String,
+    val reason: String? = null,
     val created_at: String
 )
 

@@ -253,6 +253,15 @@ fun WalletScreen(
                                         fontSize = 12.sp,
                                         fontWeight = FontWeight.Medium
                                     )
+                                    if (request.status == "REJECTED" && !request.reason.isNullOrBlank()) {
+                                        Spacer(modifier = Modifier.height(4.dp))
+                                        Text(
+                                            text = "Reason: ${request.reason}",
+                                            color = Color(0xFFEF4444),
+                                            fontSize = 11.sp,
+                                            fontWeight = FontWeight.Normal
+                                        )
+                                    }
                                 }
                                 Text(
                                     text = "${if (request.type == "ADD") "+" else "-"}₹${request.amount}",
