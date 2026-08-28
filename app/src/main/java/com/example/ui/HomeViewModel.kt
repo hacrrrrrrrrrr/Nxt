@@ -146,13 +146,26 @@ class HomeViewModel : ViewModel() {
                 try {
                     val session = SupabaseClient.client.auth.currentSessionOrNull()
                     if (session != null) {
-                        val profile = SupabaseClient.client.postgrest["profiles"]
-                            .select { filter { eq("id", session.user?.id ?: "") } }
+                        val userId = session.user?.id ?: ""
+                        var profile = SupabaseClient.client.postgrest["profiles"]
+                            .select { filter { eq("id", userId) } }
                             .decodeSingleOrNull<Profile>()
+                            
+                        if (profile == null) {
+                            val email = session.user?.email ?: ""
+                            val name = email.substringBefore("@").ifEmpty { "player_${userId.take(6)}" }
+                            SupabaseClient.client.postgrest["profiles"].upsert(
+                                mapOf("id" to userId, "uid" to userId, "in_game_name" to name, "wallet_balance" to 0)
+                            )
+                            profile = SupabaseClient.client.postgrest["profiles"]
+                                .select { filter { eq("id", userId) } }
+                                .decodeSingleOrNull<Profile>()
+                        }
                         balance = profile?.wallet_balance ?: 0
                     }
                 } catch (e: Exception) {
                     // Ignore auth/profile errors for now, leave balance at 0
+                    e.printStackTrace()
                 }
 
                 _uiState.value = _uiState.value.copy(

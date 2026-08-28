@@ -48,8 +48,18 @@ class WalletViewModel : ViewModel() {
             try {
                 val session = SupabaseClient.client.auth.currentSessionOrNull()
                 if (session != null) {
+                    val userId = session.user!!.id
+                    try {
+                        val email = session.user!!.email ?: ""
+                        val name = email.substringBefore("@").ifEmpty { "player_${userId.take(6)}" }
+                        SupabaseClient.client.postgrest["profiles"].upsert(
+                            mapOf("id" to userId, "uid" to userId, "in_game_name" to name)
+                        )
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
                     val request = WalletRequestInsert(
-                        user_id = session.user!!.id,
+                        user_id = userId,
                         type = "WITHDRAW",
                         amount = amount,
                         upi_id = upiId

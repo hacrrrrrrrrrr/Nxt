@@ -47,6 +47,7 @@ import com.example.ui.theme.TextDark
 import com.example.ui.AuthScreen
 import io.github.jan.supabase.auth.auth
 import com.example.network.SupabaseClient
+import io.github.jan.supabase.postgrest.postgrest
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -61,6 +62,26 @@ class MainActivity : ComponentActivity() {
                 LaunchedEffect(sessionStatus) {
                     when (sessionStatus) {
                         is io.github.jan.supabase.auth.status.SessionStatus.Authenticated -> {
+                            try {
+                                val session = SupabaseClient.client.auth.currentSessionOrNull()
+                                if (session != null) {
+                                    val userId = session.user!!.id
+                                    val profile = SupabaseClient.client.postgrest["profiles"]
+                                        .select { filter { eq("id", userId) } }
+                                        .decodeSingleOrNull<com.example.ui.Profile>()
+                                    if (profile == null) {
+                                        SupabaseClient.client.postgrest["profiles"].insert(
+                                            mapOf(
+                                                "id" to userId,
+                                                "uid" to userId,
+                                                "in_game_name" to "Player_${userId.take(6)}"
+                                            )
+                                        )
+                                    }
+                                }
+                            } catch (e: Exception) {
+                                e.printStackTrace()
+                            }
                             kotlinx.coroutines.delay(1500L)
                             navController.navigate("main") { popUpTo("splash") { inclusive = true } }
                         }

@@ -11,6 +11,40 @@ CREATE TABLE IF NOT EXISTS public.profiles (
     role TEXT DEFAULT 'user'
 );
 
+-- Trigger to create profile on signup
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS trigger AS $$
+BEGIN
+  INSERT INTO public.profiles (id, uid, in_game_name, role, wallet_balance)
+  VALUES (new.id, new.id::text, COALESCE(split_part(new.email, '@', 1), 'player_' || substr(new.id::text, 1, 6)), 'user', 0)
+  ON CONFLICT (id) DO NOTHING;
+  RETURN new;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE PROCEDURE public.handle_new_user();
+
+-- Backfill existing users
+INSERT INTO public.profiles (id, uid, in_game_name, role, wallet_balance)
+SELECT id, id::text, COALESCE(split_part(email, '@', 1), 'player_' || substr(id::text, 1, 6)), 'user', 0
+FROM auth.users
+ON CONFLICT (id) DO NOTHING;
+
+-- 5. Wallet Requests Table (if it was missing)
+CREATE TABLE IF NOT EXISTS public.wallet_requests (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL,
+    type TEXT NOT NULL,
+    amount NUMERIC NOT NULL,
+    upi_id TEXT,
+    screenshot_url TEXT,
+    status TEXT DEFAULT 'PENDING',
+    created_at TIMESTAMPTZ DEFAULT now()
+);
+
 -- 2. Tournaments Table
 CREATE TABLE IF NOT EXISTS public.tournaments (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -67,6 +101,38 @@ USING (
     bucket_id = 'payment_proofs' AND 
     EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin')
 );
+
+-- ==============================================================================
+-- 5. Wallet Requests Table
+-- ==============================================================================
+CREATE TABLE IF NOT EXISTS public.wallet_requests (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID DEFAULT auth.uid() REFERENCES public.profiles(id) ON DELETE CASCADE,
+    type TEXT NOT NULL,
+    amount NUMERIC NOT NULL,
+    upi_id TEXT,
+    screenshot_url TEXT,
+    status TEXT DEFAULT 'PENDING',
+    created_at TIMESTAMPTZ DEFAULT now(),
+    CONSTRAINT fk_wallet_user FOREIGN KEY (user_id) REFERENCES public.profiles(id)
+);
+
+-- ==============================================================================
+-- 6. Trigger for Profile Creation
+-- ==============================================================================
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS trigger AS $$
+BEGIN
+  INSERT INTO public.profiles (id, uid, in_game_name, wallet_balance, role)
+  VALUES (new.id, new.id::text, 'Player_' || substr(new.id::text, 1, 6), 0, 'user');
+  RETURN new;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE PROCEDURE public.handle_new_user();
 
 -- ==============================================================================
 -- RPC Function: approve_deposit
