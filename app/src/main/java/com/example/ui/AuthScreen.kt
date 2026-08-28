@@ -25,9 +25,6 @@ import com.example.network.SupabaseClient
 import com.example.ui.theme.*
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.auth.providers.builtin.Email
-import io.github.jan.supabase.compose.auth.composeAuth
-import io.github.jan.supabase.compose.auth.composable.NativeSignInResult
-import io.github.jan.supabase.compose.auth.composable.rememberSignInWithGoogle
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -121,27 +118,6 @@ fun AuthScreen(onAuthSuccess: () -> Unit, viewModel: AuthViewModel = viewModel()
     val recoil = remember { Animatable(0f) }
     val flashAlpha = remember { Animatable(0f) }
     val coroutineScope = rememberCoroutineScope()
-
-    val googleSignInState = SupabaseClient.client.composeAuth.rememberSignInWithGoogle(
-        onResult = { result ->
-            when (result) {
-                is NativeSignInResult.Success -> {
-                    // Navigate on success
-                    onAuthSuccess()
-                }
-                is NativeSignInResult.ClosedByUser -> {
-                    viewModel.setErrorMessage("Sign-In Canceled: Developer error or SHA-1 mismatch (Google returned CANCELED/16). Exact result: $result")
-                }
-                is NativeSignInResult.Error -> {
-                    viewModel.setErrorMessage("Error: ${result.message}")
-                }
-                is NativeSignInResult.NetworkError -> {
-                    viewModel.setErrorMessage("NetworkError: ${result.message}")
-                }
-            }
-        },
-        fallback = {}
-    )
 
     fun fireGun() {
         try {
@@ -363,8 +339,14 @@ fun AuthScreen(onAuthSuccess: () -> Unit, viewModel: AuthViewModel = viewModel()
         Spacer(modifier = Modifier.height(24.dp))
         
         Button(
-            onClick = { 
-                googleSignInState.startFlow()
+            onClick = {
+                coroutineScope.launch {
+                    try {
+                        SupabaseClient.client.auth.signInWith(io.github.jan.supabase.auth.providers.Google)
+                    } catch (e: Exception) {
+                        viewModel.setErrorMessage("Google Sign-In Error: ${e.message}")
+                    }
+                }
             },
             colors = ButtonDefaults.buttonColors(containerColor = TextDark),
             modifier = Modifier

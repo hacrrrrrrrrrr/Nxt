@@ -128,6 +128,25 @@ class HomeViewModel : ViewModel() {
         startCountdownTimer()
     }
 
+    fun refreshWalletBalance() {
+        viewModelScope.launch {
+            try {
+                val session = SupabaseClient.client.auth.currentSessionOrNull()
+                if (session != null) {
+                    val userId = session.user?.id ?: ""
+                    val profile = SupabaseClient.client.postgrest["profiles"]
+                        .select { filter { eq("id", userId) } }
+                        .decodeSingleOrNull<Profile>()
+                    if (profile != null) {
+                        _uiState.value = _uiState.value.copy(walletBalance = profile.wallet_balance)
+                    }
+                }
+            } catch (e: Exception) {
+                // Ignore silently
+            }
+        }
+    }
+
     private fun fetchHomeData() {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, error = null)

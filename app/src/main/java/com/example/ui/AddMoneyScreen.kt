@@ -34,6 +34,14 @@ import com.example.network.SupabaseClient
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.postgrest.postgrest
 import io.github.jan.supabase.storage.storage
+import kotlinx.serialization.Serializable
+
+@Serializable
+data class AppSettings(
+    val id: Int,
+    val upi_id: String? = null,
+    val qr_code_url: String? = null
+)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -46,9 +54,21 @@ fun AddMoneyScreen(
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
     var isLoading by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
+    
+    var appSettings by remember { mutableStateOf<AppSettings?>(null) }
 
     val context = androidx.compose.ui.platform.LocalContext.current
     val coroutineScope = rememberCoroutineScope()
+    
+    LaunchedEffect(Unit) {
+        try {
+            appSettings = SupabaseClient.client.postgrest["app_settings"]
+                .select { filter { eq("id", 1) } }
+                .decodeSingleOrNull<AppSettings>()
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
 
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
@@ -82,11 +102,19 @@ fun AddMoneyScreen(
             Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
                 Text("Scan to Pay", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = TextDark)
                 Spacer(modifier = Modifier.height(8.dp))
-                coil.compose.AsyncImage(
-                    model = SupabaseClient.client.storage["admin"].publicUrl("qr_code.png"),
-                    contentDescription = "Admin QR Code",
-                    modifier = Modifier.size(200.dp).clip(RoundedCornerShape(12.dp))
-                )
+                if (appSettings?.qr_code_url != null) {
+                    coil.compose.AsyncImage(
+                        model = appSettings?.qr_code_url,
+                        contentDescription = "Admin QR Code",
+                        modifier = Modifier.size(200.dp).clip(RoundedCornerShape(12.dp))
+                    )
+                } else {
+                    Box(modifier = Modifier.size(200.dp).background(Color.LightGray, RoundedCornerShape(12.dp)), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator(color = PrimaryOrange)
+                    }
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+                Text("UPI ID: ${appSettings?.upi_id ?: "Loading..."}", fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = TextDark)
             }
             // Amount Input
             Column {

@@ -46,12 +46,14 @@ import com.example.ui.theme.TextDark
 
 import com.example.ui.AuthScreen
 import io.github.jan.supabase.auth.auth
+import io.github.jan.supabase.auth.handleDeeplinks
 import com.example.network.SupabaseClient
 import io.github.jan.supabase.postgrest.postgrest
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        SupabaseClient.client.handleDeeplinks(intent)
         enableEdgeToEdge()
         setContent {
             MyApplicationTheme {
@@ -166,6 +168,12 @@ fun MainScreen(
         Icons.Default.Leaderboard,
         Icons.Default.Person
     )
+
+    LaunchedEffect(selectedItem) {
+        if (selectedItem == 2 || selectedItem == 0) {
+            homeViewModel.refreshWalletBalance()
+        }
+    }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
