@@ -46,7 +46,9 @@ data class TournamentParticipant(
     val tournament_id: String,
     val user_id: String,
     val in_game_name: String,
-    val in_game_uid: String
+    val in_game_uid: String,
+    val kills: Int? = 0,
+    val prize_won: Int? = 0
 )
 
 data class HomeUiState(
