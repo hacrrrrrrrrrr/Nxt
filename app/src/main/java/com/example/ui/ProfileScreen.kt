@@ -23,6 +23,7 @@ import com.example.ui.theme.TextDark
 import com.example.ui.theme.TextGray
 import com.example.network.SupabaseClient
 import io.github.jan.supabase.auth.auth
+import io.github.jan.supabase.postgrest.postgrest
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
@@ -109,15 +110,29 @@ fun ProfileScreen(onLogout: () -> Unit = {}) {
                             coroutineScope.launch {
                                 isSaving = true
                                 try {
-                                    SupabaseClient.client.auth.updateUser {
-                                        data = buildJsonObject {
-                                            put("ff_name", ffName)
-                                            put("ff_uid", ffUid)
+                                    val currentUser = SupabaseClient.client.auth.currentSessionOrNull()?.user
+                                    if (currentUser != null) {
+                                        // Update Metadata
+                                        SupabaseClient.client.auth.updateUser {
+                                            data = buildJsonObject {
+                                                put("ff_name", ffName)
+                                                put("ff_uid", ffUid)
+                                            }
                                         }
+                                        
+                                        // Update profiles table
+                                        SupabaseClient.client.postgrest["profiles"].update(
+                                                mapOf(
+                                                    "in_game_name" to ffName,
+                                                    "in_game_uid" to ffUid
+                                                )
+                                            ) {
+                                                filter { eq("id", currentUser.id) }
+                                            }
                                     }
                                     isEditing = false
                                 } catch (e: Exception) {
-                                    android.widget.Toast.makeText(context, "Failed to save", android.widget.Toast.LENGTH_SHORT).show()
+                                    android.widget.Toast.makeText(context, "Failed to save: ${e.message}", android.widget.Toast.LENGTH_SHORT).show()
                                 } finally {
                                     isSaving = false
                                 }

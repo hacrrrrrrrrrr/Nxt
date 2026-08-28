@@ -6,6 +6,8 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -31,6 +33,7 @@ import kotlinx.coroutines.launch
 import com.example.network.SupabaseClient
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.postgrest.postgrest
+import io.github.jan.supabase.storage.storage
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -44,6 +47,7 @@ fun AddMoneyScreen(
     var isLoading by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
 
+    val context = androidx.compose.ui.platform.LocalContext.current
     val coroutineScope = rememberCoroutineScope()
 
     val imagePickerLauncher = rememberLauncherForActivityResult(
@@ -70,9 +74,20 @@ fun AddMoneyScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .padding(16.dp),
+                .padding(16.dp)
+                .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
+            // QR Code
+            Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
+                Text("Scan to Pay", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = TextDark)
+                Spacer(modifier = Modifier.height(8.dp))
+                coil.compose.AsyncImage(
+                    model = SupabaseClient.client.storage["admin"].publicUrl("qr_code.png"),
+                    contentDescription = "Admin QR Code",
+                    modifier = Modifier.size(200.dp).clip(RoundedCornerShape(12.dp))
+                )
+            }
             // Amount Input
             Column {
                 Text("Deposit Amount (₹)", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = TextGray)
@@ -150,11 +165,23 @@ fun AddMoneyScreen(
                             val session = SupabaseClient.client.auth.currentSessionOrNull()
                             if (session != null) {
                                 val amountInt = amount.toIntOrNull() ?: throw Exception("Invalid amount")
-                                val request = WalletRequest(
+                                
+                                // Upload image
+                                val bucket = SupabaseClient.client.storage["payment_receipts"]
+                                val filename = "receipt_${System.currentTimeMillis()}.jpg"
+                                val inputStream = context.contentResolver.openInputStream(selectedImageUri!!)
+                                val bytes = inputStream?.readBytes() ?: throw Exception("Failed to read image")
+                                bucket.upload(filename, bytes) {
+                                    upsert = false
+                                }
+                                val screenshotUrl = bucket.publicUrl(filename)
+
+                                val request = WalletRequestInsert(
                                     user_id = session.user!!.id,
                                     type = "ADD",
                                     amount = amountInt,
-                                    upi_id = utrId // we store UTR in the upi_id field for now, or just send it as text
+                                    upi_id = utrId,
+                                    screenshot_url = screenshotUrl
                                 )
                                 SupabaseClient.client.postgrest["wallet_requests"].insert(request)
                             }

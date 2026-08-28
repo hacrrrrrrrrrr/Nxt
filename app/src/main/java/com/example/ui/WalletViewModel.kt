@@ -11,17 +11,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 
-@Serializable
-data class WalletRequest(
-    val id: String = "",
-    val user_id: String,
-    val type: String,
-    val amount: Int,
-    val upi_id: String? = null,
-    val status: String = "PENDING",
-    val created_at: String = ""
-)
-
 class WalletViewModel : ViewModel() {
     private val _requests = MutableStateFlow<List<WalletRequest>>(emptyList())
     val requests: StateFlow<List<WalletRequest>> = _requests.asStateFlow()
@@ -59,7 +48,7 @@ class WalletViewModel : ViewModel() {
             try {
                 val session = SupabaseClient.client.auth.currentSessionOrNull()
                 if (session != null) {
-                    val request = WalletRequest(
+                    val request = WalletRequestInsert(
                         user_id = session.user!!.id,
                         type = "WITHDRAW",
                         amount = amount,

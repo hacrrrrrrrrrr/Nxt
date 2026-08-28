@@ -56,13 +56,21 @@ class MainActivity : ComponentActivity() {
             MyApplicationTheme {
                 val navController = rememberNavController()
                 
-                LaunchedEffect(Unit) {
-                    kotlinx.coroutines.delay(2000L)
-                    val session = SupabaseClient.client.auth.currentSessionOrNull()
-                    if (session != null) {
-                        navController.navigate("main") { popUpTo("splash") { inclusive = true } }
-                    } else {
-                        navController.navigate("auth") { popUpTo("splash") { inclusive = true } }
+                val sessionStatus by SupabaseClient.client.auth.sessionStatus.collectAsState()
+                
+                LaunchedEffect(sessionStatus) {
+                    when (sessionStatus) {
+                        is io.github.jan.supabase.auth.status.SessionStatus.Authenticated -> {
+                            kotlinx.coroutines.delay(1500L)
+                            navController.navigate("main") { popUpTo("splash") { inclusive = true } }
+                        }
+                        is io.github.jan.supabase.auth.status.SessionStatus.NotAuthenticated -> {
+                            kotlinx.coroutines.delay(1500L)
+                            navController.navigate("auth") { popUpTo("splash") { inclusive = true } }
+                        }
+                        else -> {
+                            // LoadingFromStorage or NetworkError, stay on splash for now
+                        }
                     }
                 }
                 
